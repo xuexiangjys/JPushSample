@@ -32,6 +32,14 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan|stateHidden" />
 
+        <!-- 用户自定义接收消息器,所有你想要知道的消息都在这里-->
+        <receiver android:name=".core.push.PushMessageReceiver">
+            <intent-filter>
+                <action android:name="cn.jpush.android.intent.RECEIVE_MESSAGE" />
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </receiver>
+
         <!--屏幕自适应设计图-->
         <meta-data
             android:name="design_width_in_dp"

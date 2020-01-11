@@ -38,7 +38,7 @@ public class MainFragment extends BaseContainerFragment implements ClickUtils.On
     protected Class[] getPagesClasses() {
         return new Class[] {
                 //此处填写fragment
-                EmptyFragment.class
+                PushInitFragment.class
         };
     }
 

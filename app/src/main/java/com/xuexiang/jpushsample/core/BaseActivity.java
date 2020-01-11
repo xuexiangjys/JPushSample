@@ -26,6 +26,7 @@ import com.xuexiang.xpage.core.CoreSwitchBean;
 import com.xuexiang.xrouter.facade.service.SerializationService;
 import com.xuexiang.xrouter.launcher.XRouter;
 import com.xuexiang.xui.XUI;
+import com.xuexiang.xui.widget.slideback.SlideBack;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -53,6 +54,7 @@ public class BaseActivity extends XPageActivity {
         super.onCreate(savedInstanceState);
         mUnbinder = ButterKnife.bind(this);
     }
+
 
     /**
      * 打开fragment

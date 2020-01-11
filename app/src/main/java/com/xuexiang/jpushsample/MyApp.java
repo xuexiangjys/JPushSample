@@ -22,8 +22,9 @@ import android.content.Context;
 
 import androidx.multidex.MultiDex;
 
-import com.xuexiang.jpushsample.utils.sdkinit.UMengInit;
 import com.xuexiang.jpushsample.utils.sdkinit.XBasicLibInit;
+
+import cn.jpush.android.api.JPushInterface;
 
 /**
  * @author xuexiang
@@ -50,10 +51,7 @@ public class MyApp extends Application {
     private void initLibs() {
         XBasicLibInit.init(this);
 
-        //运营统计数据运行时不初始化
-        if (!MyApp.isDebug()) {
-            UMengInit.init(this);
-        }
+        initJPush();
     }
 
 
@@ -62,6 +60,15 @@ public class MyApp extends Application {
      */
     public static boolean isDebug() {
         return BuildConfig.DEBUG;
+    }
+
+
+    /**
+     * 初始化极光推送
+     */
+    private void initJPush() {
+        JPushInterface.setDebugMode(isDebug());
+        JPushInterface.init(this);
     }
 
 

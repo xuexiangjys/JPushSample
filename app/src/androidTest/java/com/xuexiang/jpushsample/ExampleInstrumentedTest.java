@@ -1,4 +1,4 @@
-package com.xuexiang.templateproject;
+package com.xuexiang.jpushsample;
 
 import android.content.Context;
 

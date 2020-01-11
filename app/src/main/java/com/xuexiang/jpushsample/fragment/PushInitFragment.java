@@ -22,13 +22,13 @@ import com.xuexiang.jpushsample.core.BaseFragment;
 import com.xuexiang.xpage.annotation.Page;
 
 /**
- * 这个只是一个空壳Fragment，只是用于演示而已
+ * 推送初始化
  *
  * @author xuexiang
  * @since 2019-07-08 00:52
  */
-@Page(name = "空页面")
-public class EmptyFragment extends BaseFragment {
+@Page(name = "推送初始化")
+public class PushInitFragment extends BaseFragment {
 
     /**
      * 布局的资源id
@@ -37,7 +37,7 @@ public class EmptyFragment extends BaseFragment {
      */
     @Override
     protected int getLayoutId() {
-        return R.layout.fragment_empty;
+        return R.layout.fragment_push_init;
     }
 
     /**

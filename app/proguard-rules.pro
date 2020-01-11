@@ -137,14 +137,6 @@
 #SignalR推送
 -keep class microsoft.aspnet.signalr.** { *; }
 
-# 极光推送混淆
--dontoptimize
--dontpreverify
--dontwarn cn.jpush.**
--keep class cn.jpush.** { *; }
--dontwarn cn.jiguang.**
--keep class cn.jiguang.** { *; }
-
 # 数据库框架OrmLite
 -keepattributes *DatabaseField*
 -keepattributes *DatabaseTable*
@@ -253,3 +245,15 @@
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
+
+
+
+# 极光推送混淆
+-dontoptimize
+-dontpreverify
+-dontwarn cn.jpush.**
+-keep class cn.jpush.** { *; }
+-dontwarn cn.jiguang.**
+-keep class cn.jiguang.** { *; }
+-keep class cn.jiguang.** { *; }
+-keep class * extends cn.jpush.android.service.JPushMessageReceiver{*;}
