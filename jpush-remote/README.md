@@ -33,6 +33,8 @@ dependencies {
     implementation 'cn.jiguang.sdk:jcore:2.2.6'
 }
 
+```
+
 2.配置项目的`AndroidManifest.xml`文件
 
 ```

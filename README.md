@@ -1,6 +1,6 @@
 # JPushSample
 
-极光推送使用指南
+极光推送Android客户端使用指南，极光推送官网: https://www.jiguang.cn/push
 
 ## 关于我
 
@@ -93,6 +93,7 @@ dependencies {
     implementation 'cn.jiguang.sdk:jpush:3.5.4'
     implementation 'cn.jiguang.sdk:jcore:2.2.6'
 }
+```
 
 2.配置项目的`AndroidManifest.xml`文件
 
