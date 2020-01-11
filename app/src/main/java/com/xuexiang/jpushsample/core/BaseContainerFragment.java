@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 xuexiangjys(xuexiangjys@163.com)
+ * Copyright (C) 2020 xuexiangjys(xuexiangjys@163.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  *
  */
 
-package com.xuexiang.templateproject.core;
+package com.xuexiang.jpushsample.core;
 
 import android.content.res.Configuration;
 import android.view.View;
@@ -32,9 +32,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.xuexiang.templateproject.core.SimpleListAdapter.KEY_SUB_TITLE;
-import static com.xuexiang.templateproject.core.SimpleListAdapter.KEY_TITLE;
 
 /**
  * 修改列表样式为主副标题显示
@@ -69,11 +66,11 @@ public abstract class BaseContainerFragment extends XPageContainerListFragment {
             Map<String, String> item = new HashMap<>();
             int index = content.indexOf("\n");
             if (index > 0) {
-                item.put(KEY_TITLE, String.valueOf(content.subSequence(0, index)));
-                item.put(KEY_SUB_TITLE, String.valueOf(content.subSequence(index + 1, content.length())));
+                item.put(SimpleListAdapter.KEY_TITLE, String.valueOf(content.subSequence(0, index)));
+                item.put(SimpleListAdapter.KEY_SUB_TITLE, String.valueOf(content.subSequence(index + 1, content.length())));
             } else {
-                item.put(KEY_TITLE, content);
-                item.put(KEY_SUB_TITLE, "");
+                item.put(SimpleListAdapter.KEY_TITLE, content);
+                item.put(SimpleListAdapter.KEY_SUB_TITLE, "");
             }
             data.add(item);
         }

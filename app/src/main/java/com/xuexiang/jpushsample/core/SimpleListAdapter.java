@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 xuexiangjys(xuexiangjys@163.com)
+ * Copyright (C) 2020 xuexiangjys(xuexiangjys@163.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
  *
  */
 
-package com.xuexiang.templateproject.core;
+package com.xuexiang.jpushsample.core;
 
 import android.content.Context;
 import android.view.View;
 import android.widget.TextView;
 
-import com.xuexiang.templateproject.R;
+import com.xuexiang.jpushsample.R;
 import com.xuexiang.xui.adapter.listview.BaseListAdapter;
 import com.xuexiang.xutil.common.StringUtils;
 

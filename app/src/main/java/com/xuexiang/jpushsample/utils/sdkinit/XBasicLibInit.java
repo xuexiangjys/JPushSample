@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 xuexiangjys(xuexiangjys@163.com)
+ * Copyright (C) 2020 xuexiangjys(xuexiangjys@163.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
  *
  */
 
-package com.xuexiang.templateproject.utils.sdkinit;
+package com.xuexiang.jpushsample.utils.sdkinit;
 
 import android.app.Application;
 
-import com.xuexiang.templateproject.MyApp;
-import com.xuexiang.templateproject.core.BaseActivity;
-import com.xuexiang.templateproject.utils.XToastUtils;
+import com.xuexiang.jpushsample.MyApp;
+import com.xuexiang.jpushsample.core.BaseActivity;
+import com.xuexiang.jpushsample.utils.XToastUtils;
 import com.xuexiang.xaop.XAOP;
 import com.xuexiang.xpage.AppPageConfig;
 import com.xuexiang.xpage.PageConfig;

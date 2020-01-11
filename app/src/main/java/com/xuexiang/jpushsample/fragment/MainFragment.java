@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 xuexiangjys(xuexiangjys@163.com)
+ * Copyright (C) 2020 xuexiangjys(xuexiangjys@163.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
  *
  */
 
-package com.xuexiang.templateproject.fragment;
+package com.xuexiang.jpushsample.fragment;
 
 import android.view.KeyEvent;
 
-import com.xuexiang.templateproject.core.BaseContainerFragment;
-import com.xuexiang.templateproject.utils.XToastUtils;
+import com.xuexiang.jpushsample.core.BaseContainerFragment;
+import com.xuexiang.jpushsample.utils.XToastUtils;
 import com.xuexiang.xpage.annotation.Page;
 import com.xuexiang.xpage.enums.CoreAnim;
 import com.xuexiang.xui.widget.actionbar.TitleBar;
@@ -31,7 +31,7 @@ import com.xuexiang.xutil.common.ClickUtils;
  * @author xuexiang
  * @since 2018/11/7 下午1:16
  */
-@Page(name = "模版程序", anim = CoreAnim.none)
+@Page(name = "极光推送演示", anim = CoreAnim.none)
 public class MainFragment extends BaseContainerFragment implements ClickUtils.OnClick2ExitListener {
 
     @Override

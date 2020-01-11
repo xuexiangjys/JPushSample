@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 xuexiangjys(xuexiangjys@163.com)
+ * Copyright (C) 2020 xuexiangjys(xuexiangjys@163.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,15 @@
  *
  */
 
-package com.xuexiang.templateproject;
+package com.xuexiang.jpushsample;
 
 import android.app.Application;
 import android.content.Context;
 
 import androidx.multidex.MultiDex;
 
-import com.xuexiang.templateproject.utils.sdkinit.UMengInit;
-import com.xuexiang.templateproject.utils.sdkinit.XBasicLibInit;
+import com.xuexiang.jpushsample.utils.sdkinit.UMengInit;
+import com.xuexiang.jpushsample.utils.sdkinit.XBasicLibInit;
 
 /**
  * @author xuexiang

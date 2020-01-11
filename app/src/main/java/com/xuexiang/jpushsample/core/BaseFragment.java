@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 xuexiangjys(xuexiangjys@163.com)
+ * Copyright (C) 2020 xuexiangjys(xuexiangjys@163.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@
  *
  */
 
-package com.xuexiang.templateproject.core;
+package com.xuexiang.jpushsample.core;
 
 import android.content.res.Configuration;
 import android.os.Parcelable;
-import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -28,21 +27,26 @@ import androidx.fragment.app.Fragment;
 import com.umeng.analytics.MobclickAgent;
 import com.xuexiang.xpage.base.XPageActivity;
 import com.xuexiang.xpage.base.XPageFragment;
-import com.xuexiang.xpage.base.XPageSimpleListFragment;
 import com.xuexiang.xpage.core.PageOption;
 import com.xuexiang.xpage.enums.CoreAnim;
 import com.xuexiang.xrouter.facade.service.SerializationService;
 import com.xuexiang.xrouter.launcher.XRouter;
+import com.xuexiang.xui.utils.WidgetUtils;
 import com.xuexiang.xui.widget.actionbar.TitleBar;
 import com.xuexiang.xui.widget.actionbar.TitleUtils;
+import com.xuexiang.xui.widget.progress.loading.IMessageLoader;
 
 import java.io.Serializable;
 
 /**
+ * 基础fragment
+ *
  * @author xuexiang
- * @since 2018/12/29 下午12:41
+ * @since 2018/5/25 下午3:44
  */
-public abstract class BaseSimpleListFragment extends XPageSimpleListFragment {
+public abstract class BaseFragment extends XPageFragment {
+
+    private IMessageLoader mIMessageLoader;
 
     @Override
     protected void initPage() {
@@ -52,12 +56,28 @@ public abstract class BaseSimpleListFragment extends XPageSimpleListFragment {
     }
 
     protected TitleBar initTitle() {
-        return TitleUtils.addTitleBarDynamic((ViewGroup) getRootView(), getPageTitle(), new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                popToBack();
-            }
-        });
+        return TitleUtils.addTitleBarDynamic((ViewGroup) getRootView(), getPageTitle(), v -> popToBack());
+    }
+
+    @Override
+    protected void initListeners() {
+
+    }
+
+    public IMessageLoader getMessageLoader() {
+        if (mIMessageLoader == null) {
+            mIMessageLoader = WidgetUtils.getMiniLoadingDialog(getContext());
+        }
+        return mIMessageLoader;
+    }
+
+    public IMessageLoader getMessageLoader(String message) {
+        if (mIMessageLoader == null) {
+            mIMessageLoader = WidgetUtils.getMiniLoadingDialog(getContext(), message);
+        } else {
+            mIMessageLoader.updateMessage(message);
+        }
+        return mIMessageLoader;
     }
 
     @Override
@@ -84,7 +104,6 @@ public abstract class BaseSimpleListFragment extends XPageSimpleListFragment {
     }
 
     //==============================页面跳转api===================================//
-
     /**
      * 打开一个新的页面
      *
@@ -160,16 +179,6 @@ public abstract class BaseSimpleListFragment extends XPageSimpleListFragment {
             option.putString(key, serializeObject(value));
         }
         return option.open(this);
-    }
-
-    /**
-     * 序列化对象
-     *
-     * @param object
-     * @return
-     */
-    public String serializeObject(Object object) {
-        return XRouter.getInstance().navigation(SerializationService.class).object2Json(object);
     }
 
     /**
@@ -275,4 +284,15 @@ public abstract class BaseSimpleListFragment extends XPageSimpleListFragment {
                 .setRequestCode(requestCode)
                 .open(this);
     }
+
+    /**
+     * 序列化对象
+     *
+     * @param object
+     * @return
+     */
+    public String serializeObject(Object object) {
+        return XRouter.getInstance().navigation(SerializationService.class).object2Json(object);
+    }
+
 }
