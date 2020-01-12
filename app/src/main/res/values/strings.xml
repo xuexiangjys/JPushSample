@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">极光推送演示</string>
+
+    <string name="hint_tag">请输入标签(Tag),以英文\",\"隔开</string>
+
 </resources>

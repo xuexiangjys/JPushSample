@@ -65,7 +65,7 @@ dependencies {
     androidTestImplementation deps.runner
     androidTestImplementation deps.espresso.core
 
-    //原创依赖
+    //远程依赖
     implementation project(path: ':jpush-remote')
 
     implementation deps.androidx.multidex
@@ -73,6 +73,11 @@ dependencies {
     implementation 'me.jessyan:autosize:1.1.2'
     //美团多渠道打包
     implementation 'com.meituan.android.walle:library:1.1.6'
+
+    //RxJava
+    implementation deps.rxjava2
+    implementation deps.rx_android
+    implementation 'com.github.xuexiangjys:RxUtil2:1.1.5'
 }
 
 //x-library依赖脚本

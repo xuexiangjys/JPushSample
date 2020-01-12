@@ -17,9 +17,23 @@
 
 package com.xuexiang.jpushsample.fragment;
 
+import android.view.View;
+import android.widget.TextView;
+
 import com.xuexiang.jpushsample.R;
 import com.xuexiang.jpushsample.core.BaseFragment;
+import com.xuexiang.jpushsample.core.push.event.PushEvent;
+import com.xuexiang.jpushsample.utils.JPushUtils;
+import com.xuexiang.rxutil2.rxbus.RxBusUtils;
+import com.xuexiang.rxutil2.rxbus.SubscribeInfo;
+import com.xuexiang.xaop.annotation.SingleClick;
 import com.xuexiang.xpage.annotation.Page;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+
+import static com.xuexiang.jpushsample.core.push.event.EventType.TYPE_CONNECT_STATUS_CHANGED;
+import static com.xuexiang.jpushsample.core.push.event.PushEvent.KEY_PUSH_EVENT;
 
 /**
  * 推送初始化
@@ -29,6 +43,15 @@ import com.xuexiang.xpage.annotation.Page;
  */
 @Page(name = "推送初始化")
 public class PushInitFragment extends BaseFragment {
+
+    @BindView(R.id.tv_token)
+    TextView tvToken;
+    @BindView(R.id.tv_connect_status)
+    TextView tvConnectStatus;
+    @BindView(R.id.tv_push_status)
+    TextView tvPushStatus;
+
+    private SubscribeInfo mPushEvent;
 
     /**
      * 布局的资源id
@@ -45,6 +68,57 @@ public class PushInitFragment extends BaseFragment {
      */
     @Override
     protected void initViews() {
+        tvToken.setText(JPushUtils.getRegistrationID());
+        tvConnectStatus.setText(String.valueOf(JPushUtils.isConnected()));
+        tvPushStatus.setText(JPushUtils.isPushStopped() ? "已停止" : "工作中");
+    }
+
+    @Override
+    protected void initListeners() {
+        mPushEvent = RxBusUtils.get().onMainThread(KEY_PUSH_EVENT, PushEvent.class, this::handlePushEvent);
 
     }
+
+    @SingleClick
+    @OnClick({R.id.btn_resume, R.id.btn_stop})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.btn_resume:
+                JPushUtils.resumePush();
+                break;
+            case R.id.btn_stop:
+                JPushUtils.stopPush();
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * 处理推送事件
+     *
+     * @param pushEvent
+     */
+    private void handlePushEvent(PushEvent pushEvent) {
+        switch (pushEvent.getType()) {
+            case TYPE_CONNECT_STATUS_CHANGED:
+                tvConnectStatus.setText(String.valueOf(pushEvent.isSuccess()));
+                tvPushStatus.setText(JPushUtils.isPushStopped() ? "已停止" : "工作中");
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    @Override
+    public void onDestroyView() {
+        if (mPushEvent != null) {
+            RxBusUtils.get().unregister(KEY_PUSH_EVENT, mPushEvent);
+            mPushEvent = null;
+        }
+        super.onDestroyView();
+    }
+
+
 }

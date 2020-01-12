@@ -34,6 +34,8 @@
 
 ## 快速集成指南
 
+> 本文是基于`jpush:3.5.4`和`jcore:2.2.6`版本介绍的，暂只介绍最新推荐的使用方法，那些过时的用法这里我就不多介绍了，想了解的可以去[极光推送官方文档](https://docs.jiguang.cn/jpush/client/Android/android_sdk/)查看。
+
 ### 集成前的准备工作
 
 > 在接入极光推送前，首先需要获取到应用的AppKey，它是应用的唯一标识。
@@ -59,7 +61,7 @@
 
 ### 引入依赖库
 
-#### jcenter自动集成
+#### 方法一 jcenter自动集成
 
 > 使用 jcenter 自动集成的开发者，不需要在项目中添加 jar 和 so，jcenter 会自动完成依赖；在 AndroidManifest.xml 中不需要添加任何 JPush SDK 相关的配置，jcenter 会自动导入。
 
@@ -130,7 +132,7 @@ dependencies {
 [点击参见自动集成的项目源码](https://github.com/xuexiangjys/JPushSample/tree/master/jpush-remote)
 
 
-#### 本地手动集成
+#### 方法二 本地手动集成
 
 1.首先你需要先去下载SDK，下载地址: https://docs.jiguang.cn/jpush/resources/
 
@@ -355,6 +357,17 @@ private void initJPush() {
 }
 ```
 
+### 运行调试
+
+当完成以上步骤后，可直接运行程序，并查看logcat日志，设置过滤条件为"JIGUANG"，如果出现"Register succeed"和"registrationId:xxxxxxxxxxxxxx"字样，即为集成成功！如下图所示：
+
+![](./art/jpush_init.png)
+
+注意事项：
+
+* 一定要保证配置的AppKey和应用的包名保持一致。
+* 一定要保证运行的设备网络是可用的，否则无法连接推送。
+
 ### 混淆配置
 
 配置项目的`proguard-rules.pro`文件。
@@ -372,7 +385,134 @@ private void initJPush() {
 
 ----
 
+## 基础功能使用
+
+### 初始化
+
+1.上面已经讲过了，推送初始化建议在自定义的 Application 中的 onCreate 中调用，且推送初始化只需要调用一次即可。
+
+```
+JPushInterface.init(Context context);
+```
+
+2.推送初始化成功后，平台会返回一个唯一的token令牌，那就是`RegistrationID`，获取它的方法如下：
+
+```
+JPushInterface.getRegistrationID(Context context);
+```
+
+3.获取当前推送的连接状态方法如下：
+
+```
+JPushInterface.getConnectionState(Context context)
+```
+
+### 推送状态控制
+
+1.停止推送。在某些业务中，我们需要临时暂停推送，例如账户退出登陆等，这个时候我们可以调用如下方法：
+
+```
+JPushInterface.stopPush(Context context);
+```
+
+需要注意的是，这里的停止推送只是个本地客户端的操作，并不会通知到推送服务平台。其表现效果类似设备断网，将不会收到任何推送消息，并且极光推送所有的其他 API 调用都无效，除了`resumePush`恢复推送服务的方法。
+
+2.恢复推送。当调用了停止推送的方法后，只有调用恢复推送的方法后，极光推送服务才能正常工作。方法如下：
+
+```
+JPushInterface.resumePush(Context context);
+```
+
+3.获取推送的工作状态。想要知道当前推送服务是否正在工作，可通过如下方法：
+
+```
+JPushInterface.isPushStopped(Context context);
+```
+
+### 操作别名alias
+
+> 别名在极光推送中尤为重要，通常我们用得最多的就是根据别名进行推送。我们通常的做法是用户登陆后，业务平台会返回一个平台生成的唯一识别号作为推送的别名，然后后台需要推送的时候，就直接拿着这个别名通知极光推送服务进行消息推送。
+
+1.绑定别名alias。
+
+```
+JPushInterface.setAlias(Context context, int sequence, String alias);
+```
+
+2.解绑别名alias。
+
+```
+JPushInterface.deleteAlias(Context context, int sequence);
+```
+
+3.获取绑定的别名alias。
+
+```
+JPushInterface.getAlias(Context context, int sequence);
+```
+
+注意事项：
+
+1.这里的`sequence`主要就是操作识别码，用于识别操作类型，由使用者自己定义。
+
+2.以上所有的方法返回的都是void（都是异步操作），方法的返回都在自定义的消息接收器中，就是上面继承JPushMessageReceiver由使用者自定义的广播接收器中获取。
+
+3.别名相关操作的结果都在`JPushMessageReceiver`的`onAliasOperatorResult`方法中回调，需要获取别名操作结果的可重写该方法。
 
 
+### 操作标签Tags
+
+> 标签好比一个分组，当我们需要对某一类特殊群体进行消息推送时，便可使用标签进行推送。
+
+1.增加标签Tags。这是一个增量请求。
+
+```
+JPushInterface.addTags(Context context, int sequence, Set<String> tags);
+```
+
+2.删除标签Tags。
+
+```
+JPushInterface.deleteTags(Context context, int sequence, Set<String> tags);
+```
+
+3.获取标签Tags。
+
+```
+JPushInterface.getAllTags(Context context, int sequence);
+```
+
+4.设置标签Tags。这是一个全量请求，会覆盖之前设置的标签。
+
+```
+JPushInterface.setTags(Context context, int sequence, Set<String> tags);
+```
+
+5.清除所有标签。
+
+```
+JPushInterface.cleanTags(Context context, int sequence);
+```
+
+6.查询指定 tag 与当前用户绑定的状态。
+
+```
+JPushInterface.checkTagBindState(Context context, int sequence, String tag);
+```
+
+注意事项：
+
+1.这里的`sequence`和别名方法中的一样，也是操作识别码，用于识别操作类型，由使用者自己定义。
+
+2.以上所有的方法返回的都是void（都是异步操作），方法的返回都在自定义的消息接收器中，就是上面继承JPushMessageReceiver由使用者自定义的广播接收器中获取。
+
+3.标签相关操作的结果都在`JPushMessageReceiver`的`onTagOperatorResult`方法中回调，需要获取标签操作结果的可重写该方法。
+
+4.`checkTagBindState`方法的结果是在`JPushMessageReceiver`的`onCheckTagOperatorResult`方法中回调，需要获取标签查询匹配结果的可重写该方法。
+
+
+### 消息接收
+
+#### 自定义消息接收
 
 
