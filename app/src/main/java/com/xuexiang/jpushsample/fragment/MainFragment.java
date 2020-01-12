@@ -39,7 +39,8 @@ public class MainFragment extends BaseContainerFragment implements ClickUtils.On
         return new Class[] {
                 //此处填写fragment
                 PushInitFragment.class,
-                AliasAndTagsOperationFragment.class
+                AliasAndTagsOperationFragment.class,
+                PushMessageReceiveFragment.class
         };
     }
 

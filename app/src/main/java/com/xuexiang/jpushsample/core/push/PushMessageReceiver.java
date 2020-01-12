@@ -22,7 +22,9 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.xuexiang.jpushsample.core.push.event.EventType;
+import com.xuexiang.jpushsample.core.push.event.MessageType;
 import com.xuexiang.jpushsample.core.push.event.PushEvent;
+import com.xuexiang.jpushsample.core.push.event.PushMessage;
 import com.xuexiang.rxutil2.rxbus.RxBusUtils;
 
 import cn.jpush.android.api.CmdMessage;
@@ -33,6 +35,7 @@ import cn.jpush.android.api.NotificationMessage;
 import cn.jpush.android.service.JPushMessageReceiver;
 
 import static com.xuexiang.jpushsample.core.push.event.PushEvent.KEY_PUSH_EVENT;
+import static com.xuexiang.jpushsample.core.push.event.PushMessage.KEY_PUSH_MESSAGE;
 
 /**
  * 极光推送消息接收器
@@ -44,45 +47,70 @@ public class PushMessageReceiver extends JPushMessageReceiver {
 
     private static final String TAG = "JPush-Receiver";
 
+
+    //======================下面的都是消息的回调=========================================//
+
     /**
-     * 自定义消息接收
+     * 收到自定义消息回调
      *
      * @param context
-     * @param message
+     * @param message 自定义消息
      */
     @Override
     public void onMessage(Context context, CustomMessage message) {
         Log.e(TAG, "[onMessage]:" + message);
+        RxBusUtils.get().post(KEY_PUSH_MESSAGE, PushMessage.wrap(MessageType.TYPE_CUSTOM, message));
+    }
+
+
+    /**
+     * 收到通知回调
+     *
+     * @param context
+     * @param message 通知消息
+     */
+    @Override
+    public void onNotifyMessageArrived(Context context, NotificationMessage message) {
+        Log.e(TAG, "[onNotifyMessageArrived]:" + message);
+        RxBusUtils.get().post(KEY_PUSH_MESSAGE, PushMessage.wrap(MessageType.TYPE_NOTIFICATION, message));
     }
 
     /**
-     * 通知消息被点击
+     * 点击通知回调
      *
      * @param context
-     * @param message
+     * @param message 通知消息
      */
     @Override
     public void onNotifyMessageOpened(Context context, NotificationMessage message) {
         Log.e(TAG, "[onNotifyMessageOpened]:" + message);
-
     }
 
-    @Override
-    public void onMultiActionClicked(Context context, Intent intent) {
-        Log.e(TAG, "[onMultiActionClicked] 用户点击了通知栏按钮:" + intent.getExtras().getString(JPushInterface.EXTRA_NOTIFICATION_ACTION_EXTRA));
-    }
 
-    @Override
-    public void onNotifyMessageArrived(Context context, NotificationMessage message) {
-        Log.e(TAG, "[onNotifyMessageArrived]:" + message);
-
-    }
-
+    /**
+     * 清除通知回调
+     *
+     * 说明:
+     * 1.同时删除多条通知，可能不会多次触发清除通知的回调
+     * 2.只有用户手动清除才有回调，调接口清除不会有回调
+     *
+     * @param context
+     * @param message 通知消息
+     */
     @Override
     public void onNotifyMessageDismiss(Context context, NotificationMessage message) {
         Log.e(TAG, "[onNotifyMessageArrived]:" + message);
 
     }
+
+
+    @Override
+    public void onMultiActionClicked(Context context, Intent intent) {
+        Log.e(TAG, "[onMultiActionClicked] 用户点击了通知栏上的按钮:" + intent.getExtras().getString(JPushInterface.EXTRA_NOTIFICATION_ACTION_EXTRA));
+    }
+
+
+    //======================下面的都是操作的回调=========================================//
 
     @Override
     public void onRegister(Context context, String registrationId) {

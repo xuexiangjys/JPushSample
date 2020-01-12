@@ -17,10 +17,16 @@
 
 package com.xuexiang.jpushsample.activity;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 
 import com.xuexiang.jpushsample.core.BaseActivity;
 import com.xuexiang.jpushsample.fragment.MainFragment;
+import com.xuexiang.jpushsample.utils.JPushUtils;
+import com.xuexiang.jpushsample.utils.NotificationUtils;
+
+import cn.jpush.android.api.JPushInterface;
 
 /**
  * 程序入口，空壳容器
@@ -34,6 +40,8 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         openPage(MainFragment.class);
+
+        JPushUtils.requestPermission(this);
     }
 
 }

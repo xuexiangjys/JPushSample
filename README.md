@@ -407,6 +407,9 @@ JPushInterface.getRegistrationID(Context context);
 JPushInterface.getConnectionState(Context context)
 ```
 
+[点击参见推送初始化演示源码](https://github.com/xuexiangjys/JPushSample/blob/master/app/src/main/java/com/xuexiang/jpushsample/fragment/PushInitFragment.java)
+
+
 ### 推送状态控制
 
 1.停止推送。在某些业务中，我们需要临时暂停推送，例如账户退出登陆等，这个时候我们可以调用如下方法：
@@ -428,6 +431,12 @@ JPushInterface.resumePush(Context context);
 ```
 JPushInterface.isPushStopped(Context context);
 ```
+
+[点击参见推送状态控制演示源码](https://github.com/xuexiangjys/JPushSample/blob/master/app/src/main/java/com/xuexiang/jpushsample/fragment/PushInitFragment.java)
+
+
+-------
+
 
 ### 操作别名alias
 
@@ -458,6 +467,8 @@ JPushInterface.getAlias(Context context, int sequence);
 2.以上所有的方法返回的都是void（都是异步操作），方法的返回都在自定义的消息接收器中，就是上面继承JPushMessageReceiver由使用者自定义的广播接收器中获取。
 
 3.别名相关操作的结果都在`JPushMessageReceiver`的`onAliasOperatorResult`方法中回调，需要获取别名操作结果的可重写该方法。
+
+[点击参见别名操作演示源码](https://github.com/xuexiangjys/JPushSample/blob/master/app/src/main/java/com/xuexiang/jpushsample/fragment/AliasAndTagsOperationFragment.java)
 
 
 ### 操作标签Tags
@@ -509,6 +520,11 @@ JPushInterface.checkTagBindState(Context context, int sequence, String tag);
 3.标签相关操作的结果都在`JPushMessageReceiver`的`onTagOperatorResult`方法中回调，需要获取标签操作结果的可重写该方法。
 
 4.`checkTagBindState`方法的结果是在`JPushMessageReceiver`的`onCheckTagOperatorResult`方法中回调，需要获取标签查询匹配结果的可重写该方法。
+
+[点击参见标签操作演示源码](https://github.com/xuexiangjys/JPushSample/blob/master/app/src/main/java/com/xuexiang/jpushsample/fragment/AliasAndTagsOperationFragment.java)
+
+
+-------
 
 
 ### 消息接收

@@ -17,9 +17,12 @@
 
 package com.xuexiang.jpushsample.utils;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Application;
 
 import com.xuexiang.jpushsample.MyApp;
+import com.xuexiang.jpushsample.activity.MainActivity;
 import com.xuexiang.xutil.XUtil;
 
 import java.util.Set;
@@ -200,5 +203,36 @@ public final class JPushUtils {
     public static void checkTagBindState(String tag) {
         JPushInterface.checkTagBindState(XUtil.getContext(), TYPE_CHECK_TAG_BIND_STATE, tag);
     }
+
+
+    //===========辅助操作===============//
+
+    /**
+     * 申请定位、存储和通知栏的权限
+     *
+     * @param activity
+     */
+    public static void requestPermission(Activity activity) {
+        //打开通知栏的权限
+        if (JPushInterface.isNotificationEnabled(activity) == 0) {
+            new AlertDialog.Builder(activity)
+                    .setCancelable(false)
+                    .setMessage("通知权限未打开，是否前去打开？")
+                    .setPositiveButton("是", (d, w) -> JPushInterface.goToAppNotificationSettings(activity))
+                    .setNegativeButton("否", null)
+                    .show();
+        }
+        JPushInterface.requestPermission(activity);
+    }
+
+    /**
+     * 设置是否开启省电模式，默认是false， 关闭的
+     *
+     * @param enable
+     */
+    public static void setPowerSaveMode(boolean enable) {
+        JPushInterface.setPowerSaveMode(XUtil.getContext(), enable);
+    }
+
 
 }
