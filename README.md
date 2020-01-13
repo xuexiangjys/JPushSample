@@ -552,7 +552,7 @@ JPushInterface.checkTagBindState(Context context, int sequence, String tag);
 
 -------
 
-### 操作结果查询
+### 操作结果获取
 
 > 这里的操作主要包括：注册、别名(绑定、解绑、获取)、标签(添加、删除、获取、设置、清除、状态检查)、手机号设置等。由于极光提供的这些操作都是异步的，且方法不能直接返回结果和提供回调接口，因此只能通过重写`JPushMessageReceiver`中相应的方法获取。
 
@@ -825,15 +825,58 @@ public class PushMessageReceiver extends JPushMessageReceiver {
     }
 ```
 
--------
+[点击参见操作结果获取演示源码](https://github.com/xuexiangjys/JPushSample/tree/master/app/src/main/java/com/xuexiang/jpushsample/core/push)
 
+[点击参见自定义JPushMessageReceiver的源码](https://github.com/xuexiangjys/JPushSample/blob/master/app/src/main/java/com/xuexiang/jpushsample/core/push/PushMessageReceiver.java)
+
+-------
 
 ### 消息接收
 
-#### 自定义消息接收
+#### 自定义消息
+
+> 自定义消息，又称之为透传消息。顾名思义是由使用者自己定义一套解析格式的消息，这种消息在接收到后不会有任何界面上的展示，携带内容为String型，通常的做法是传一个json。这种比较灵活的消息推送方式是最常用的一种。但是这里需要注意的是，这种消息是一种应用内的消息，一旦应用被杀死，将无法及时收到该消息。
+
+1.自定义消息体(CustomMessage)介绍
+
+字段名 | 类型 | 字段说明 
+:-|:-:|:-
+messageId | String | 消息ID，对应推送平台上的消息唯一号
+message | String | 对应推送消息界面上的“自定义消息内容”字段
+extra | String | 保存服务器推送下来的附加字段。这是个 JSON 字符串，对应推送消息界面上的“可选设置”里的附加字段。
+title | String | 消息的标题（没多大作用）
+
+2.自定义消息接收
+
+如果想要接收自定义消息，只需重写`JPushMessageReceiver`中的`onMessage`方法即可。在`onMessage`方法中将会回调`CustomMessage`自定义消息体。
 
 
+#### 普通通知消息
 
+> 普通通知消息，就是在系统通知栏上显示的消息。但是如果通知的内容为空，则不会在通知栏上展示通知。
+
+1.通知消息体(NotificationMessage)介绍
+
+字段名 | 类型 | 字段说明 
+:-|:-:|:-
+messageId | String | 消息ID，对应推送平台上的消息唯一号
+notificationId | int | 通知栏的 Notification ID，用于清除 Notification
+notificationTitle | String | 通知的标题，对应推送通知界面上的“通知标题”字段
+notificationContent | String | 通知的内容，对应推送通知界面上的“通知内容”字段
+notificationExtras | String | 附加字段，对应推送通知界面上的“可选设置”里的附加字段
+notificationTitle | String | 通知的标题，对应推送通知界面上的“通知标题”字段
+
+2.普通通知消息接收
+
+如果想要接收自定义消息，只需重写`JPushMessageReceiver`中的`onNotifyMessageArrived`方法即可。在`onNotifyMessageArrived`方法中将会回调`NotificationMessage`通知消息体。
+
+3.通知消息被点击
+
+> 在做消息推送开发的时候，我们一定会有一个需求：希望用户点击通知后，能够自动跳转到我们应用的某个页面。这个页面可能是某一个活动宣传页面，也有可能是某个新闻或者视频页面。这个时候，我们就需要对通知消息点击后的动作进行自定义。
+
+那么我们该如何自定义通知消息被点击后的动作呢？很简单，我们只需要重写`JPushMessageReceiver`中的`onNotifyMessageOpened`方法，在方法中读取传递过来的参数，然后结合页面路由机制（例如：ARouter）直接跳转至指定页面即可。
+
+下面我简单写个例子供大家参考：
 
 
 
