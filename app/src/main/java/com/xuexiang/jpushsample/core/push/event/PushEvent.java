@@ -54,6 +54,12 @@ public final class PushEvent {
         mData = data;
     }
 
+    public PushEvent(@EventType int type, boolean isSuccess, Object data) {
+        mType = type;
+        mIsSuccess = isSuccess;
+        mData = data;
+    }
+
     public int getType() {
         return mType;
     }

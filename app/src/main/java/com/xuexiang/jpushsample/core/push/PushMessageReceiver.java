@@ -115,7 +115,7 @@ public class PushMessageReceiver extends JPushMessageReceiver {
     @Override
     public void onRegister(Context context, String registrationId) {
         Log.e(TAG, "[onRegister]:" + registrationId);
-
+        RxBusUtils.get().post(KEY_PUSH_EVENT, new PushEvent(EventType.TYPE_REGISTER, true, registrationId));
     }
 
     /**

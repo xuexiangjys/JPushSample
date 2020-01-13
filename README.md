@@ -336,7 +336,7 @@ android {
 
 ### 初始化
 
-在Application中初始化JPush
+1.在Application中初始化JPush
 
 ```
 public class MyApp extends Application {
@@ -356,6 +356,32 @@ private void initJPush() {
     JPushInterface.init(this);
 }
 ```
+
+2.在应用的第一个页面申请权限（可选）
+
+由于Android手机定制ROM太多，部分手机的通知栏权限默认是关闭的，需要用户手动打开。如果不打开通知栏权限的话，即使你连上了推送，也无法收到推送消息。
+
+```
+/**
+ * 申请定位、存储和通知栏的权限
+ *
+ * @param activity
+ */
+public static void requestPermission(Activity activity) {
+    //打开通知栏的权限
+    if (JPushInterface.isNotificationEnabled(activity) == 0) {
+        new AlertDialog.Builder(activity)
+                .setCancelable(false)
+                .setMessage("通知权限未打开，是否前去打开？")
+                .setPositiveButton("是", (d, w) -> JPushInterface.goToAppNotificationSettings(activity))
+                .setNegativeButton("否", null)
+                .show();
+    }
+    //申请定位、存储权限
+    JPushInterface.requestPermission(activity);
+}
+```
+
 
 ### 运行调试
 
@@ -526,9 +552,288 @@ JPushInterface.checkTagBindState(Context context, int sequence, String tag);
 
 -------
 
+### 操作结果查询
+
+> 这里的操作主要包括：注册、别名(绑定、解绑、获取)、标签(添加、删除、获取、设置、清除、状态检查)、手机号设置等。由于极光提供的这些操作都是异步的，且方法不能直接返回结果和提供回调接口，因此只能通过重写`JPushMessageReceiver`中相应的方法获取。
+
+所有的操作结果都可以从`JPushMessageReceiver`提供的回调方法中获取。但是`JPushMessageReceiver`最多只能作为消息的中转站，使用起来极为不便，因此我们可以结合一些事件机制来处理，将这些结果包装为一个个推送事件向外发出去，这样只需要在需要的地方订阅一下事件就可以获取到结果了。下面我以RxBus为例简单编写，使用的库是我的开源库[RxUtil2](https://github.com/xuexiangjys/RxUtil2)
+
+1.定义操作事件的类型,用于识别操作类型。上文中提到的`sequence`参数就可以使用它。
+
+```
+/**
+ * 推送事件的类型
+ */
+@IntDef({TYPE_REGISTER, TYPE_UNREGISTER, TYPE_CONNECT_STATUS_CHANGED, TYPE_ADD_TAGS, TYPE_DEL_TAGS, TYPE_GET_TAGS, TYPE_BIND_ALIAS, TYPE_UNBIND_ALIAS, TYPE_GET_ALIAS})
+@Retention(RetentionPolicy.SOURCE)
+public @interface EventType {
+    /**
+     * 注册推送
+     */
+    int TYPE_REGISTER = 2000;
+    /**
+     * 取消注册推送
+     */
+    int TYPE_UNREGISTER = 2001;
+    /**
+     * 推送连接状态发生变化
+     */
+    int TYPE_CONNECT_STATUS_CHANGED = 2002;
+
+    /**
+     * 绑定别名
+     */
+    int TYPE_BIND_ALIAS = 2010;
+    /**
+     * 解绑别名
+     */
+    int TYPE_UNBIND_ALIAS = 2011;
+    /**
+     * 获取别名
+     */
+    int TYPE_GET_ALIAS = 2012;
+
+    /**
+     * 添加标签[增量]
+     */
+    int TYPE_ADD_TAGS = 2020;
+    /**
+     * 删除标签
+     */
+    int TYPE_DEL_TAGS = 2021;
+    /**
+     * 获取标签
+     */
+    int TYPE_GET_TAGS = 2022;
+    /**
+     * 设置标签[全量]
+     */
+    int TYPE_SET_TAGS = 2023;
+    /**
+     * 清除所有标签
+     */
+    int TYPE_CLEAN_TAGS = 2024;
+    /**
+     * 查询指定 tag 与当前用户绑定的状态
+     */
+    int TYPE_CHECK_TAG_BIND_STATE = 2025;
+}
+```
+
+2.定义推送事件的载体.
+
+该载体只需要定义三个成员变量：mType（事件类型）、mIsSuccess（是否成功）、mData（携带的数据）。如下所示：
+
+```
+/**
+ * 推送事件的载体
+ */
+public final class PushEvent {
+    public static final String KEY_PUSH_EVENT = "com.xuexiang.jpushsample.core.push.event.KEY_PUSH_EVENT";
+    /**
+     * 事件类型
+     */
+    private int mType;
+    /**
+     * 是否成功（也可以定义为int型的结果码）
+     */
+    private boolean mIsSuccess;
+    /**
+     * 携带的数据（也可以定义为String型的数据）
+     */
+    private Object mData;
+
+    public PushEvent(@EventType int type) {
+        mType = type;
+    }
+
+    public PushEvent(@EventType int type, boolean isSuccess) {
+        mType = type;
+        mIsSuccess = isSuccess;
+    }
+
+    public PushEvent(@EventType int type, Object data) {
+        mType = type;
+        mData = data;
+    }
+
+    public int getType() {
+        return mType;
+    }
+
+    public PushEvent setType(@EventType int type) {
+        mType = type;
+        return this;
+    }
+
+    public boolean isSuccess() {
+        return mIsSuccess;
+    }
+
+    public PushEvent setSuccess(boolean success) {
+        mIsSuccess = success;
+        return this;
+    }
+
+    public Object getData() {
+        return mData;
+    }
+
+    public PushEvent setData(Object data) {
+        mData = data;
+        return this;
+    }
+}
+```
+
+3.事件处理并发送.
+
+在`JPushMessageReceiver`中重写指定的方法，并将结果转译为一个个`PushEvent`发送出去。
+
+```
+/**
+ * 极光推送消息接收器
+ */
+public class PushMessageReceiver extends JPushMessageReceiver {
+    private static final String TAG = "JPush-Receiver";
+    //======================下面的都是操作的回调=========================================//
+
+    @Override
+    public void onRegister(Context context, String registrationId) {
+        Log.e(TAG, "[onRegister]:" + registrationId);
+        RxBusUtils.get().post(KEY_PUSH_EVENT, new PushEvent(EventType.TYPE_REGISTER, true, registrationId));
+    }
+
+    /**
+     * 连接状态发生变化
+     *
+     * @param context
+     * @param isConnected 是否已连接
+     */
+    @Override
+    public void onConnected(Context context, boolean isConnected) {
+        Log.e(TAG, "[onConnected]:" + isConnected);
+        RxBusUtils.get().post(KEY_PUSH_EVENT, new PushEvent(EventType.TYPE_CONNECT_STATUS_CHANGED, isConnected));
+    }
+
+    /**
+     * 所有和标签相关操作结果
+     *
+     * @param context
+     * @param jPushMessage
+     */
+    @Override
+    public void onTagOperatorResult(Context context, JPushMessage jPushMessage) {
+        Log.e(TAG, "[onTagOperatorResult]:" + jPushMessage);
+        PushEvent pushEvent = new PushEvent(jPushMessage.getSequence(), jPushMessage.getErrorCode() == 0)
+                .setData(JPushInterface.getStringTags(jPushMessage.getTags()));
+        RxBusUtils.get().post(KEY_PUSH_EVENT, pushEvent);
+    }
+
+    /**
+     * 所有和别名相关操作结果
+     *
+     * @param context
+     * @param jPushMessage
+     */
+    @Override
+    public void onAliasOperatorResult(Context context, JPushMessage jPushMessage) {
+        Log.e(TAG, "[onAliasOperatorResult]:" + jPushMessage);
+        PushEvent pushEvent = new PushEvent(jPushMessage.getSequence(), jPushMessage.getErrorCode() == 0)
+                .setData(jPushMessage.getAlias());
+        RxBusUtils.get().post(KEY_PUSH_EVENT, pushEvent);
+    }
+
+    /**
+     * 标签状态检测结果
+     *
+     * @param context
+     * @param jPushMessage
+     */
+    @Override
+    public void onCheckTagOperatorResult(Context context, JPushMessage jPushMessage) {
+        Log.e(TAG, "[onCheckTagOperatorResult]:" + jPushMessage);
+        PushEvent pushEvent = new PushEvent(jPushMessage.getSequence(), jPushMessage.getErrorCode() == 0)
+                .setData(jPushMessage);
+        RxBusUtils.get().post(KEY_PUSH_EVENT, pushEvent);
+    }
+}
+```
+
+4.在需要获取结果的地方订阅或者取消事件。
+
+```
+    @Override
+    protected void initListeners() {
+        //订阅推送事件
+        mPushEvent = RxBusUtils.get().onMainThread(KEY_PUSH_EVENT, PushEvent.class, this::handlePushEvent);
+    }
+    
+   /**
+     * 处理推送事件，获取操作的结果
+     * @param pushEvent
+     */
+    private void handlePushEvent(PushEvent pushEvent) {
+        String content = pushEvent.getData().toString();
+        switch (pushEvent.getType()) {
+            case TYPE_BIND_ALIAS:
+                if (pushEvent.isSuccess()) {
+                    tvAlias.setText(content);
+                    XToastUtils.success("别名[" + content + "]绑定成功");
+                } else {
+                    XToastUtils.error("别名[" + content + "]绑定失败");
+                }
+                break;
+            case TYPE_UNBIND_ALIAS:
+                //别名解绑
+                break;
+            case TYPE_GET_ALIAS:
+                //获取别名
+                break;
+            case TYPE_ADD_TAGS:
+                //添加标签
+                break;
+            case TYPE_DEL_TAGS:
+                //删除标签
+                break;
+            case TYPE_GET_TAGS:
+                //获取标签
+                break;
+            case TYPE_SET_TAGS:
+                //设置标签
+                break;
+            case TYPE_CLEAN_TAGS:
+                //清除标签
+                break;
+            case TYPE_CHECK_TAG_BIND_STATE:
+                //检查标签
+                break;
+                ........
+            default:
+                break;
+        }
+    }
+    
+    @Override
+    public void onDestroyView() {
+        if (mPushEvent != null) {
+            //取消订阅推送事件
+            RxBusUtils.get().unregister(KEY_PUSH_EVENT, mPushEvent);
+            mPushEvent = null;
+        }
+        super.onDestroyView();
+    }
+```
+
+-------
+
 
 ### 消息接收
 
 #### 自定义消息接收
+
+
+
+
 
 
