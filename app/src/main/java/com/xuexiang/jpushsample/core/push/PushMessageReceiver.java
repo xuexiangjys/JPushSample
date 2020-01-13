@@ -21,11 +21,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.xuexiang.jpushsample.activity.NotificationTransferActivity;
 import com.xuexiang.jpushsample.core.push.event.EventType;
 import com.xuexiang.jpushsample.core.push.event.MessageType;
 import com.xuexiang.jpushsample.core.push.event.PushEvent;
 import com.xuexiang.jpushsample.core.push.event.PushMessage;
+import com.xuexiang.jpushsample.utils.Utils;
 import com.xuexiang.rxutil2.rxbus.RxBusUtils;
+import com.xuexiang.xutil.app.ActivityUtils;
+import com.xuexiang.xutil.app.IntentUtils;
 
 import cn.jpush.android.api.CmdMessage;
 import cn.jpush.android.api.CustomMessage;
@@ -84,6 +88,10 @@ public class PushMessageReceiver extends JPushMessageReceiver {
     @Override
     public void onNotifyMessageOpened(Context context, NotificationMessage message) {
         Log.e(TAG, "[onNotifyMessageOpened]:" + message);
+        //自定义打开到通知栏点击后的容器页
+        Intent intent = Utils.parseNotificationMessage(IntentUtils.getIntent(context, NotificationTransferActivity.class, null, true), message);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        ActivityUtils.startActivity(intent);
     }
 
 

@@ -25,7 +25,16 @@
             </intent-filter>
         </activity>
         <!--通知被点击之后跳转的页面-->
-        <activity android:name=".activity.NotificationTransferActivity" />
+        <activity android:name=".activity.NotificationTransferActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:host="com.xuexiang.jpush"
+                    android:path="/notification"
+                    android:scheme="jpush" />
+            </intent-filter>
+        </activity>
 
         <!--fragment的页面容器-->
         <activity

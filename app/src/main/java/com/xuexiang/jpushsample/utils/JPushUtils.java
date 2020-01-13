@@ -22,7 +22,6 @@ import android.app.AlertDialog;
 import android.app.Application;
 
 import com.xuexiang.jpushsample.MyApp;
-import com.xuexiang.jpushsample.activity.MainActivity;
 import com.xuexiang.xutil.XUtil;
 
 import java.util.Set;

@@ -876,7 +876,166 @@ notificationTitle | String | 通知的标题，对应推送通知界面上的“
 
 那么我们该如何自定义通知消息被点击后的动作呢？很简单，我们只需要重写`JPushMessageReceiver`中的`onNotifyMessageOpened`方法，在方法中读取传递过来的参数，然后结合页面路由机制（例如：ARouter）直接跳转至指定页面即可。
 
-下面我简单写个例子供大家参考：
+下面我将通过两种不同的途径来实现 点击通知消息后跳转至某一特定界面：
+
+1.重写`JPushMessageReceiver`中的`onNotifyMessageOpened`方法。
+
+```
+public class PushMessageReceiver extends JPushMessageReceiver {
+    /**
+     * 点击通知回调
+     *
+     * @param context
+     * @param message 通知消息
+     */
+    @Override
+    public void onNotifyMessageOpened(Context context, NotificationMessage message) {
+        Log.e(TAG, "[onNotifyMessageOpened]:" + message);
+        //自定义打开到通知栏点击后的容器页
+        Intent intent = parseNotificationMessage(IntentUtils.getIntent(context, NotificationTransferActivity.class, null, true), message);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        ActivityUtils.startActivity(intent);
+    }
+
+    /**
+     * 解析极光通知消息：NotificationMessage
+     */
+    public static Intent parseNotificationMessage(@NonNull Intent intent, NotificationMessage message) {
+        //这只是一个例子，暂时把跳转的目标页设为 "通知信息展示"
+        intent.putExtra("pageName", "通知信息展示");
+        //通知标题
+        intent.putExtra("title", message.notificationTitle);
+        //通知内容
+        intent.putExtra("content", message.notificationContent);
+        //通知附带拓展内容
+        intent.putExtra("extraMsg", message.notificationExtras);
+        //通知附带键值对
+        intent.putExtra("keyValue", message.notificationExtras);
+        return intent;
+    }
+}
+
+```
+
+2.通过`DeepLink`技术和通知栏中可选设置的`自定义（打开指定页面)`相结合的方法。
+
+（1）首先需要在`AndroidManifest.xml`中定义deeplink拦截。
+
+```
+<!--通知被点击之后跳转的页面-->
+<activity android:name=".activity.NotificationTransferActivity">
+    <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <data
+            android:host="com.xuexiang.jpush"
+            android:path="/notification"
+            android:scheme="jpush" />
+    </intent-filter>
+</activity>
+```
+
+（2）在容器界面`NotificationTransferActivity`中解析传递过来的参数。
+
+```
+/**
+ * 通知栏点击后的容器页
+ *
+ * deeplink格式
+ *
+ *  jpush://com.xuexiang.jpush/notification?pageName=通知信息展示&title=这是一个通知&content=这是通知的内容&extraMsg=xxxxxxxxx&keyValue={"param1": "1111", "param2": "2222"}
+ *
+ */
+@Router(path = "/push/notification/transfer")
+public class NotificationTransferActivity extends BaseActivity {
+
+    @AutoWired
+    String pageName;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        XRouter.getInstance().inject(this);
+
+        Uri uri = getIntent().getData();
+        Bundle bundle = getIntent().getExtras();
+        if (uri != null) {
+            //deeplink跳转
+            pageName = uri.getQueryParameter("pageName");
+            bundle = Utils.parseNotificationDeepLinkUri(uri, bundle);
+        }
+
+        if (!StringUtils.isEmpty(pageName)) {
+            //打开指定页面
+            if (openPage(pageName, bundle) == null) {
+                XToastUtils.toast("页面未找到！");
+                finish();
+            }
+        } else {
+            XToastUtils.toast("页面未找到！");
+            finish();
+        }
+    }
+
+    /**
+     * DeepLink的格式：
+     *      jpush://com.xuexiang.jpush/notification?pageName=xxxxx&title=这是一个通知&content=这是通知的内容&extraMsg=xxxxxxxxx&keyValue={"param1": "1111", "param2": "2222"}
+     * @param uri
+     * @param bundle
+     * @return
+     */
+    public static Bundle parseNotificationDeepLinkUri(@NonNull Uri uri, Bundle bundle) {
+        if (bundle == null) {
+            bundle = new Bundle();
+        }
+
+        bundle.putString("pageName", uri.getQueryParameter("pageName"));
+        //通知标题
+        bundle.putString("title", uri.getQueryParameter("title"));
+        //通知内容
+        bundle.putString("content", uri.getQueryParameter("content"));
+        //通知附带拓展内容
+        bundle.putString("extraMsg", uri.getQueryParameter("extraMsg"));
+        //通知附带键值对
+        bundle.putString("keyValue", uri.getQueryParameter("keyValue"));
+        return bundle;
+    }
+}
+```
+
+注意：上面的`openPage`方法主要使用了我的开源[XPage](https://github.com/xuexiangjys/XPage),主要的作用就是Fragment页面路由，加载一个Fragment页面。
+
+（3）发通知消息的时候，记得设置上`自定义（打开指定页面)`的链接，如下图所示：
+
+* 链接示例：
+
+```
+jpush://com.xuexiang.jpush/notification?pageName=xxxxx&title=这是一个通知&content=这是通知的内容&extraMsg=xxxxxxxxx&keyValue={"param1": "1111", "param2": "2222"}
+```
+
+* 设置示例：
+
+![](./art/notification_setting.png)
+
+
+-----
+
+## 关联链接
+
+* [本文项目源码](https://github.com/xuexiangjys/JPushSample)
+* [极光推送文档](https://docs.jiguang.cn//jpush/guideline/intro/)
+* [XPush 一个轻量级、可插拔的Android消息推送框架](https://github.com/xuexiangjys/XPush)
+* [XPage 一个非常方便的fragment页面框架](https://github.com/xuexiangjys/XPage)
+* [RxUtil2 一个实用的RxJava2工具类库](https://github.com/xuexiangjys/RxUtil2)
+
+
+## 联系方式
+
+[![](https://img.shields.io/badge/点击一键加入QQ交流群-602082750-blue.svg)](http://shang.qq.com/wpa/qunwpa?idkey=9922861ef85c19f1575aecea0e8680f60d9386080a97ed310c971ae074998887)
+
+![](https://github.com/xuexiangjys/XPage/blob/master/img/qq_group.jpg)
+
+
 
 
 

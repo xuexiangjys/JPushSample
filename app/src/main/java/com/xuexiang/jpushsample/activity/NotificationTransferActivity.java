@@ -17,9 +17,11 @@
 
 package com.xuexiang.jpushsample.activity;
 
+import android.net.Uri;
 import android.os.Bundle;
 
 import com.xuexiang.jpushsample.core.BaseActivity;
+import com.xuexiang.jpushsample.utils.Utils;
 import com.xuexiang.jpushsample.utils.XToastUtils;
 import com.xuexiang.xrouter.annotation.AutoWired;
 import com.xuexiang.xrouter.annotation.Router;
@@ -29,15 +31,17 @@ import com.xuexiang.xutil.common.StringUtils;
 /**
  * 通知栏点击后的容器页
  *
+ * deeplink格式
+ *
+ * jpush://com.xuexiang.jpush/notification?pageName=通知信息展示&title=这是一个通知&content=这是通知的内容&extraMsg=xxxxxxxxx&keyValue={"param1": "1111", "param2": "2222"}
+ *
  * @author xuexiang
  * @since 2020-01-13 17:28
  */
 @Router(path = "/push/notification/transfer")
 public class NotificationTransferActivity extends BaseActivity {
 
-    public static final String KEY_PAGE_NAME = "key_page_name";
-
-    @AutoWired(name = KEY_PAGE_NAME)
+    @AutoWired
     String pageName;
 
     @Override
@@ -45,9 +49,17 @@ public class NotificationTransferActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         XRouter.getInstance().inject(this);
 
+        Uri uri = getIntent().getData();
+        Bundle bundle = getIntent().getExtras();
+        if (uri != null) {
+            //deeplink跳转
+            pageName = uri.getQueryParameter("pageName");
+            bundle = Utils.parseNotificationDeepLinkUri(uri, bundle);
+        }
+
         if (!StringUtils.isEmpty(pageName)) {
             //打开指定页面
-            if (openPage(pageName, getIntent().getExtras()) == null) {
+            if (openPage(pageName, bundle) == null) {
                 XToastUtils.toast("页面未找到！");
                 finish();
             }
