@@ -1007,7 +1007,7 @@ public class NotificationTransferActivity extends BaseActivity {
 
 （3）发通知消息的时候，记得设置上`自定义（打开指定页面)`的链接，如下图所示：
 
-* 链接示例：
+* 链接示例，其中`jpush://com.xuexiang.jpush/notification`对应上面`AndroidManifest.xml`中配置的信息。
 
 ```
 jpush://com.xuexiang.jpush/notification?pageName=xxxxx&title=这是一个通知&content=这是通知的内容&extraMsg=xxxxxxxxx&keyValue={"param1": "1111", "param2": "2222"}
@@ -1017,6 +1017,150 @@ jpush://com.xuexiang.jpush/notification?pageName=xxxxx&title=这是一个通知&
 
 ![](./art/notification_setting.png)
 
+#### 消息接收处理
+
+> 同样的，自定义消息和通知消息都是在`JPushMessageReceiver`的回调方法中获取，和上面的操作结果类似，`JPushMessageReceiver`最多只是作为消息的中转站，如果我们想要在任何页面都能够订阅到接收到的消息，那么我们依旧可以和上面处理得一样，使用RxBus将这些消息向外发送出去。
+
+下面我给出实现的简要步骤：
+
+1.定义消息的类型，这里暂时就是自定义消息和通知消息。
+
+```
+/**
+ * 消息的类型
+ */
+@IntDef({TYPE_CUSTOM, TYPE_NOTIFICATION})
+@Retention(RetentionPolicy.SOURCE)
+public @interface MessageType {
+    /**
+     * 自定义消息
+     */
+    int TYPE_CUSTOM = 1000;
+    /**
+     * 普通通知消息
+     */
+    int TYPE_NOTIFICATION = 1001;
+}
+```
+
+2.定义推送消息的载体.
+
+目前为了偷懒，暂时就只定义了两个成员变量：mType（消息类型）和mMessage（消息数据）。如下所示：
+
+```
+/**
+ * 推送消息
+ */
+public final class PushMessage {
+    public static final String KEY_PUSH_MESSAGE = "com.xuexiang.jpushsample.core.push.event.KEY_PUSH_MESSAGE";
+    /**
+     * 消息类型
+     */
+    private int mType;
+    /**
+     * 消息数据
+     */
+    private Object mMessage;
+
+    public static PushMessage wrap(@MessageType int type, Object message) {
+        return new PushMessage(type, message);
+    }
+
+    public PushMessage(@MessageType int type, Object message) {
+        mType = type;
+        mMessage = message;
+    }
+
+    public int getType() {
+        return mType;
+    }
+
+    public PushMessage setType(int type) {
+        mType = type;
+        return this;
+    }
+
+    public <T> T getMessage() {
+        return (T) mMessage;
+    }
+
+    public PushMessage setMessage(Object message) {
+        mMessage = message;
+        return this;
+    }
+
+    public String getMessageType() {
+        switch (mType) {
+            case TYPE_CUSTOM:
+                return "自定义消息";
+            case TYPE_NOTIFICATION:
+                return "普通通知消息";
+            default:
+                return "未知消息";
+        }
+    }
+}
+```
+
+3.消息接收并分发.
+
+在`JPushMessageReceiver`中重写`onMessage`和`onNotifyMessageArrived`方法，并将结果转译为一个个`PushMessage`发送出去。
+
+```
+/**
+ * 极光推送消息接收器
+ */
+public class PushMessageReceiver extends JPushMessageReceiver {
+    private static final String TAG = "JPush-Receiver";
+    /**
+     * 收到自定义消息回调
+     *
+     * @param context
+     * @param message 自定义消息
+     */
+    @Override
+    public void onMessage(Context context, CustomMessage message) {
+        Log.e(TAG, "[onMessage]:" + message);
+        RxBusUtils.get().post(KEY_PUSH_MESSAGE, PushMessage.wrap(MessageType.TYPE_CUSTOM, message));
+    }
+    /**
+     * 收到通知回调
+     *
+     * @param context
+     * @param message 通知消息
+     */
+    @Override
+    public void onNotifyMessageArrived(Context context, NotificationMessage message) {
+        Log.e(TAG, "[onNotifyMessageArrived]:" + message);
+        RxBusUtils.get().post(KEY_PUSH_MESSAGE, PushMessage.wrap(MessageType.TYPE_NOTIFICATION, message));
+    }
+}
+```
+
+此外，如果因业务需要，在消息发送出去之前，我们还可以在发送前添加一个过滤器处理，对一些重复、无效的消息进行过滤，或者对同时接收到的消息进行消息合并等操作。
+
+4.在需要获取推送消息的地方订阅。
+
+```
+@Override
+protected void initListeners() {
+    //订阅消息
+    RxBusUtils.get().onMainThread(KEY_PUSH_MESSAGE, PushMessage.class, this::handlePushMessage);
+}
+/**
+ * 处理接收到的推送消息
+ */
+private void handlePushMessage(PushMessage pushMessage) {
+    tvType.setText(pushMessage.getMessageType());
+    tvMessage.setText(pushMessage.getMessage().toString());
+}
+@Override
+public void onDestroyView() {
+    //取消订阅
+    RxBusUtils.get().unregisterAll(KEY_PUSH_MESSAGE);
+    super.onDestroyView();
+}
+```
 
 -----
 

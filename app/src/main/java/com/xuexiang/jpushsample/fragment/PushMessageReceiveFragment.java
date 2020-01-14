@@ -58,6 +58,10 @@ public class PushMessageReceiveFragment extends BaseFragment {
 
     }
 
+    /**
+     * 处理接收到的推送消息
+     * @param pushMessage
+     */
     private void handlePushMessage(PushMessage pushMessage) {
         tvType.setText(pushMessage.getMessageType());
         tvMessage.setText(pushMessage.getMessage().toString());
